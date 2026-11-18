@@ -161,6 +161,7 @@ export const en = {
     line: "{zone} · slot {q}-{r}",
     named: "Known as {name}",
     neighborsTitle: "Your neighbourhood",
+    neighborsListTitle: "Your neighbours",
     neighborsHint: "Colonists who land next to you will appear here.",
     you: "YOU",
     away: "{d} hex away",

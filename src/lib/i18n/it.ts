@@ -162,6 +162,7 @@ export const it: Dict = {
     line: "{zone} · slot {q}-{r}",
     named: "Detto {name}",
     neighborsTitle: "Il tuo quartiere",
+    neighborsListTitle: "I tuoi vicini",
     neighborsHint: "I coloni che atterrano accanto a te compariranno qui.",
     you: "TU",
     away: "a {d} esagoni",

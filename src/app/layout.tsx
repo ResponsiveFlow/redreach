@@ -43,7 +43,8 @@ async function Lang({ children }: { children: React.ReactNode }) {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${body.variable} ${display.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
+      {/* Alcune estensioni del browser (es. ColorZilla) aggiungono attributi al body prima di React. */}
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <Suspense>
           <Lang>{children}</Lang>
         </Suspense>

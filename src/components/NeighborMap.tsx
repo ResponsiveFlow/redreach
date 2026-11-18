@@ -132,13 +132,15 @@ export async function NeighborMap({
         ))}
       </svg>
 
-      {/* Elenco leggibile: nome grande, slot e distanza */}
+      {/* Il tuo nome, poi l'elenco dei vicini: nome grande, slot e distanza */}
+      <div className="poly flex items-center gap-3 border-l-4 border-radar bg-radar/10 p-3">
+        <span className="font-display text-sm text-radar">{t.colonist.you}</span>
+        <span className="min-w-0 flex-1 truncate font-display text-xl">{myName}</span>
+        <span className="text-xs opacity-70">{fmt(t.map.slot, me)}</span>
+      </div>
+
+      <h3 className="mt-2 font-display text-2xl">{t.colonist.neighborsListTitle}</h3>
       <ul className="flex flex-col gap-2">
-        <li className="poly flex items-center gap-3 border-l-4 border-radar bg-radar/10 p-3">
-          <span className="font-display text-sm text-radar">{t.colonist.you}</span>
-          <span className="min-w-0 flex-1 truncate font-display text-xl">{myName}</span>
-          <span className="text-xs opacity-70">{fmt(t.map.slot, me)}</span>
-        </li>
         {listed.map((s, i) => (
           <li key={`${s.q}-${s.r}`} className="poly flex items-center gap-3 bg-white/5 p-3">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center bg-mars-3 font-display text-sm">

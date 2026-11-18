@@ -16,6 +16,18 @@ type View = { x: number; y: number; k: number };
 type Size = { w: number; h: number };
 
 const K_MAX = 5;
+// I nomi compaiono da zoom 1,3 in su (circa due livelli sotto il massimo comodo).
+const K_NAMES = 1.3;
+/**
+ * Dimensione del carattere (in unità della mappa) e caratteri massimi che stanno nell'esagono.
+ * Da lontano il carattere si ingrandisce, per restare leggibile (~11px sullo schermo), e il nome si accorcia.
+ */
+function nameLayout(k: number): { font: number; chars: number } {
+  const font = Math.max(5, 11 / k);
+  const room = 29; // larghezza utile di un esagono, in unità
+  const chars = Math.max(3, Math.min(8, Math.floor((room - 0.2 * font) / (0.68 * font))));
+  return { font, chars };
+}
 const MARGIN = 60;
 const POLL_HELD_MS = 6_000; // chi sta scegliendo: aggiornamento frequente (effetto "live")
 const POLL_ALL_MS = 30_000; // mappa completa
@@ -298,8 +310,9 @@ export function HexMap({
   const labelOf = (s: TakenSlot) => s.name ?? fmt(t.map.colonistN, { n: s.n });
 
   // Nomi visibili solo da vicino e solo per ciò che è nell'inquadratura (mappa leggera).
-  const names: { key: number; x: number; y: number; text: string }[] = [];
-  if (current && current.k >= 2) {
+  const names: { key: number; x: number; y: number; text: string; font: number }[] = [];
+  if (current && current.k >= K_NAMES) {
+    const { font, chars } = nameLayout(current.k);
     const x0 = -current.x / current.k - HEX * 2;
     const x1 = (size.w - current.x) / current.k + HEX * 2;
     const y0 = -current.y / current.k - HEX * 2;
@@ -308,7 +321,13 @@ export function HexMap({
       const [cx, cy] = hexCenter(s.q, s.r);
       if (cx < x0 || cx > x1 || cy < y0 || cy > y1) continue;
       const text = s.name ?? `#${s.n}`;
-      names.push({ key: s.r * cols + s.q, x: cx, y: cy + 13, text: text.length > 12 ? text.slice(0, 11) + "…" : text });
+      names.push({
+        key: s.r * cols + s.q,
+        x: cx,
+        y: cy + 11 + 0.5 * font,
+        font,
+        text: text.length > chars ? text.slice(0, chars - 1) + "…" : text,
+      });
     }
   }
 
@@ -386,19 +405,33 @@ export function HexMap({
                   strokeWidth={2.5}
                 />
               )}
-              {names.map((n) => (
-                <text
-                  key={n.key}
-                  x={n.x}
-                  y={n.y}
-                  textAnchor="middle"
-                  fontSize={5.5}
-                  fill="var(--foreground)"
-                  style={{ pointerEvents: "none" }}
-                >
-                  {n.text}
-                </text>
-              ))}
+              {names.map((n) => {
+                const w = n.text.length * 0.68 * n.font + n.font; // larghezza stimata della targhetta
+                return (
+                  <g key={n.key} style={{ pointerEvents: "none" }}>
+                    <rect
+                      x={n.x - w / 2}
+                      y={n.y - 1.12 * n.font}
+                      width={w}
+                      height={1.52 * n.font}
+                      rx={0.32 * n.font}
+                      fill="#120b14"
+                      fillOpacity={0.85}
+                    />
+                    <text
+                      x={n.x}
+                      y={n.y}
+                      textAnchor="middle"
+                      fontSize={n.font}
+                      fontWeight={700}
+                      fill="var(--foreground)"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      {n.text}
+                    </text>
+                  </g>
+                );
+              })}
             </g>
           )}
         </svg>
