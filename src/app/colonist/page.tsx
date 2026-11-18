@@ -17,7 +17,7 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://playredreach.com";
 
 async function Content() {
   const [{ t }, { supabase, user, colonist }] = await Promise.all([getDict(), getSession()]);
-  if (!user) redirect("/");
+  if (!user) redirect("/login?next=/colonist");
   if (!colonist) redirect("/zone");
 
   const db = createPublicClient();

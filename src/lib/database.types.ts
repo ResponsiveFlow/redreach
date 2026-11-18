@@ -432,6 +432,7 @@ export type Database = {
         Returns: undefined
       }
       my_invite_count: { Args: never; Returns: number }
+      release_slot: { Args: { p_session: string }; Returns: undefined }
       set_colonist_name: { Args: { p_name: string }; Returns: string }
       set_social_handles: {
         Args: { p_ig?: string; p_tiktok?: string }

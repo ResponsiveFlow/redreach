@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Chakra_Petch, Inter } from "next/font/google";
 import { CookieNotice } from "@/components/CookieNotice";
 import { CountdownBar } from "@/components/CountdownBar";
+import { HoldBanner } from "@/components/HoldBanner";
 import { I18nProvider } from "@/lib/i18n/client";
 import { getDict } from "@/lib/i18n/server";
 import { en } from "@/lib/i18n/en";
@@ -33,6 +34,7 @@ async function Lang({ children }: { children: React.ReactNode }) {
       <Suspense>
         <CountdownBar />
       </Suspense>
+      <HoldBanner />
       {children}
     </I18nProvider>
   );

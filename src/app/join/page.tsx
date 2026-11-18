@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { HoldTimer } from "@/components/HoldTimer";
 import { NameForm } from "@/components/NameForm";
 import { Shell } from "@/components/Shell";
-import { SignupForm } from "@/components/SignupForm";
+import { AuthForm } from "@/components/AuthForm";
 import { HOLD_COOKIE, parseHold } from "@/lib/hold";
 import { fmt } from "@/lib/i18n";
 import { getDict } from "@/lib/i18n/server";
@@ -34,7 +34,7 @@ async function Content() {
         subtitle={fmt(t.join.accountSubtitle, slot)}
       >
         <HoldTimer exp={hold.exp} />
-        <SignupForm zone={hold.z} next="/join" />
+        <AuthForm zone={hold.z} next="/join" initialMode="signup" />
         {back}
       </Shell>
     );

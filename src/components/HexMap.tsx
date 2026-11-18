@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { fmt } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n/client";
-import { HOLD_COOKIE, HOLD_MINUTES, SID_COOKIE } from "@/lib/hold";
+import { HOLD_MINUTES } from "@/lib/hold";
+import { HOLD_EVENT, saveHoldCookie, sessionId, useHold } from "@/lib/hold-client";
 import { HEX, depositDistance, hexCenter, hexPath, pointToHex, richness, sectorBounds } from "@/lib/hex";
 import { getHeld, getSectorState, type HeldSlot, type SectorInfo, type TakenSlot } from "@/lib/map-data";
 import type { Zone } from "@/lib/zones";
@@ -17,14 +19,6 @@ const K_MAX = 5;
 const MARGIN = 60;
 const POLL_HELD_MS = 6_000; // chi sta scegliendo: aggiornamento frequente (effetto "live")
 const POLL_ALL_MS = 30_000; // mappa completa
-
-function sessionId(): string {
-  const m = document.cookie.match(new RegExp(`(?:^|; )${SID_COOKIE}=([^;]+)`));
-  if (m && m[1].length >= 16) return m[1];
-  const id = crypto.randomUUID();
-  document.cookie = `${SID_COOKIE}=${id}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
-  return id;
-}
 
 export function HexMap({
   zone,
@@ -47,6 +41,7 @@ export function HexMap({
 }) {
   const { t } = useI18n();
   const router = useRouter();
+  const myHold = useHold();
   const [supabase] = useState(() => createClient());
   const [state, setState] = useState({ taken: initialTaken, held: initialHeld });
   const [size, setSize] = useState<Size>({ w: 0, h: 0 });
@@ -147,6 +142,16 @@ export function HexMap({
     };
   }, [supabase, sector.id]);
 
+  useEffect(() => {
+    const refresh = () => {
+      getHeld(supabase, sector.id)
+        .then((held) => setState((s) => ({ ...s, held })))
+        .catch(() => {});
+    };
+    window.addEventListener(HOLD_EVENT, refresh);
+    return () => window.removeEventListener(HOLD_EVENT, refresh);
+  }, [supabase, sector.id]);
+
   // ---------------------------------------------------------------- livelli grafici
   const tiers = useMemo(() => {
     const a = new Uint8Array(cols * rows); // 0 normale, 1 buono, 2 ricco, 3 giacimento
@@ -160,7 +165,14 @@ export function HexMap({
   }, [cols, rows, deposits]);
 
   const takenMap = useMemo(() => new Map(state.taken.map((s) => [s.r * cols + s.q, s])), [state.taken, cols]);
-  const heldSet = useMemo(() => new Set(state.held.map((s) => s.r * cols + s.q)), [state.held, cols]);
+  // Il tuo slot bloccato non è "di un altro": si distingue e si può riprendere.
+  const own = myHold && myHold.s === sector.id ? { q: myHold.q, r: myHold.r } : null;
+  const ownKey = own ? own.r * cols + own.q : -1;
+  const heldSet = useMemo(
+    () => new Set(state.held.map((s) => s.r * cols + s.q).filter((k) => k !== ownKey)),
+    [state.held, cols, ownKey],
+  );
+  const claiming = heldSet.size;
 
   const layers = useMemo(() => {
     const L = { normal: "", good: "", rich: "", held: "", taken: "", deposit: "", poles: "", flags: "" };
@@ -268,7 +280,7 @@ export function HexMap({
       return;
     }
     const hold = { z: zone, s: sector.id, q: selected.q, r: selected.r, exp: new Date(data).getTime() };
-    document.cookie = `${HOLD_COOKIE}=${encodeURIComponent(JSON.stringify(hold))}; path=/; max-age=86400; samesite=lax`;
+    saveHoldCookie(hold);
     router.push("/join");
   }
 
@@ -276,6 +288,7 @@ export function HexMap({
   const selKey = selected ? selected.r * cols + selected.q : -1;
   const selTaken = selected ? takenMap.get(selKey) : undefined;
   const selHeld = selected ? heldSet.has(selKey) && !selTaken : false;
+  const selOwn = !!selected && !!own && own.q === selected.q && own.r === selected.r;
   const selDistance = selected ? depositDistance(deposits, selected.q, selected.r) : 0;
   const selRich = selected ? richness(selDistance) : "normal";
 
@@ -300,11 +313,11 @@ export function HexMap({
     <div className="flex flex-col gap-3">
       {/* Spazio sempre riservato: quando la riga compare la mappa non si sposta. */}
       <div className="min-h-8 text-xs font-bold uppercase tracking-wider text-orange">
-        {state.held.length > 0 && (
+        {claiming > 0 && (
           <p className="flex items-start gap-2">
             <span className="blink mt-1 inline-block h-2 w-2 shrink-0 rounded-full bg-orange" />
-            {fmt(state.held.length === 1 ? t.map.claimingOne : t.map.claimingMany, {
-              n: state.held.length,
+            {fmt(claiming === 1 ? t.map.claimingOne : t.map.claimingMany, {
+              n: claiming,
               sector: `${t.zones[zone].name} ${sector.index}`,
             })}
           </p>
@@ -342,6 +355,15 @@ export function HexMap({
                   stroke="var(--orange)"
                   strokeWidth={2.5}
                   strokeDasharray="5 3"
+                />
+              )}
+              {own && (
+                <path
+                  d={hexPath(own.q, own.r, 1)}
+                  fill="var(--radar)"
+                  fillOpacity={0.35}
+                  stroke="var(--radar)"
+                  strokeWidth={2.5}
                 />
               )}
               {mine && (
@@ -417,6 +439,16 @@ export function HexMap({
           <p className="text-sm opacity-80">{readOnly ? t.map.youHave : t.map.hint}</p>
         )}
 
+        {selected && selOwn && !selTaken && (
+          <>
+            <p className="font-display text-xl">{fmt(t.map.slot, selected)}</p>
+            <p className="text-sm opacity-80">{t.map.yourHold}</p>
+            <Link href="/join" className="btn">
+              {t.map.completeReg}
+            </Link>
+          </>
+        )}
+
         {selected && selTaken && (
           <>
             <p className="font-display text-xl">{labelOf(selTaken)}</p>
@@ -426,14 +458,14 @@ export function HexMap({
           </>
         )}
 
-        {selected && !selTaken && selHeld && (
+        {selected && !selTaken && !selOwn && selHeld && (
           <>
             <p className="font-display text-xl">{fmt(t.map.slot, selected)}</p>
             <p className="text-sm opacity-80">{t.map.held}</p>
           </>
         )}
 
-        {selected && !selTaken && !selHeld && (
+        {selected && !selTaken && !selOwn && !selHeld && (
           <>
             <div className="flex flex-col gap-1">
               <p className="font-display text-xl">

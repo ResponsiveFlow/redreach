@@ -64,8 +64,12 @@ export async function proxy(request: NextRequest) {
   //    e accesso alle pagine protette con un vero redirect.
   const needsAuth = PROTECTED.includes(request.nextUrl.pathname);
   const hasAuth = request.cookies.getAll().some((c) => c.name.startsWith("sb-"));
+  const toLogin = () =>
+    NextResponse.redirect(
+      new URL(`/login?next=${encodeURIComponent(request.nextUrl.pathname)}`, request.url),
+    );
   if (needsAuth && !hasAuth) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return toLogin();
   }
   if (hasAuth) {
     const supabase = createServerClient(
@@ -85,7 +89,7 @@ export async function proxy(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
     if (needsAuth && !user) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return toLogin();
     }
   }
 

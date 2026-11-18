@@ -59,7 +59,12 @@ async function Content() {
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-7 px-4 pb-10 pt-5">
       <header className="flex items-center justify-between">
         <span className="font-display text-xl tracking-tight text-mars">{t.common.brand}</span>
-        <LangSwitch />
+        <div className="flex items-center gap-4">
+          <Link href="/login" className="text-xs font-bold uppercase tracking-widest underline">
+            {t.login.link}
+          </Link>
+          <LangSwitch />
+        </div>
       </header>
 
       <h1 className="font-display text-[2.4rem] leading-[1.05]">{t.home.hook}</h1>
