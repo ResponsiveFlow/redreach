@@ -99,6 +99,7 @@ async function Content() {
           zone={colonist.zone}
           q={colonist.q}
           r={colonist.r}
+          sectorIndex={sector.index}
           cols={sector.cols}
           rows={sector.rows}
           deposits={deposits}

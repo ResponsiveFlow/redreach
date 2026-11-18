@@ -16,6 +16,7 @@ type View = { x: number; y: number; k: number };
 type Size = { w: number; h: number };
 
 const K_MAX = 5;
+const CENTER_MS = 320; // durata dell'animazione che porta lo slot al centro
 // I nomi compaiono da zoom 1,3 in su (circa due livelli sotto il massimo comodo).
 const K_NAMES = 1.3;
 /**
@@ -62,10 +63,16 @@ export function HexMap({
   const [size, setSize] = useState<Size>({ w: 0, h: 0 });
   const [view, setView] = useState<View | null>(null);
   const [selected, setSelected] = useState<{ q: number; r: number } | null>(null);
+  // Quanto la card in basso copre la mappa: serve per poter portare al centro anche gli slot in fondo.
+  const [cover, setCover] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const wrapRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const animRef = useRef<number | null>(null);
+  const viewRef = useRef<View | null>(null);
+  const centerRef = useRef<(q: number, r: number) => void>(() => {});
   const svgRef = useRef<SVGSVGElement>(null);
   const ptrs = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef({ moved: false, startX: 0, startY: 0, pinch: 0 });
@@ -85,19 +92,20 @@ export function HexMap({
   // ---------------------------------------------------------------- vista (zoom/pan)
   const kMin = size.w ? Math.min(size.w / bounds.width, size.h / bounds.height) * 0.98 : 0.3;
 
-  function clamp(v: View): View {
+  function clampTo(v: View, coverPx: number): View {
     const k = Math.min(K_MAX, Math.max(kMin, v.k));
-    const axis = (pos: number, screen: number, min: number, len: number) => {
+    const axis = (pos: number, screen: number, min: number, len: number, pad = 0) => {
       const content = len * k;
       if (content <= screen) return (screen - content) / 2 - k * min;
-      return Math.min(MARGIN - k * min, Math.max(screen - MARGIN - k * (min + len), pos));
+      return Math.min(MARGIN - k * min, Math.max(screen - MARGIN - pad - k * (min + len), pos));
     };
     return {
       k,
       x: axis(v.x, size.w, bounds.minX, bounds.width),
-      y: axis(v.y, size.h, bounds.minY, bounds.height),
+      y: axis(v.y, size.h, bounds.minY, bounds.height, coverPx),
     };
   }
+  const clamp = (v: View): View => clampTo(v, cover);
 
   function initialView(): View {
     if (focus) {
@@ -110,7 +118,15 @@ export function HexMap({
 
   const current: View | null = size.w ? clamp(view ?? initialView()) : null;
 
+  function cancelAnim() {
+    if (animRef.current !== null) {
+      cancelAnimationFrame(animRef.current);
+      animRef.current = null;
+    }
+  }
+
   function update(fn: (v: View) => View) {
+    cancelAnim(); // se l'utente muove la mappa, l'animazione si ferma
     setView((prev) => clamp(fn(clamp(prev ?? initialView()))));
   }
 
@@ -121,6 +137,49 @@ export function HexMap({
       return { k, x: px - (px - v.x) * f, y: py - (py - v.y) * f };
     });
   }
+
+  /**
+   * Porta lo slot al centro della parte di mappa che si vede davvero (sopra la card, sotto
+   * il bordo dello schermo), con una breve animazione.
+   */
+  function centerOnSlot(q: number, r: number) {
+    const wrap = wrapRef.current;
+    const base = viewRef.current;
+    if (!wrap || !base || !size.w) return;
+    const rect = wrap.getBoundingClientRect();
+    const panelTop = panelRef.current?.getBoundingClientRect().top ?? window.innerHeight;
+    const top = Math.max(0, -rect.top);
+    const bottom = Math.min(rect.height, panelTop - rect.top);
+    if (bottom - top < 80) return; // quasi niente spazio visibile: meglio non muovere nulla
+    const nextCover = Math.max(0, rect.height - bottom);
+    const [cx, cy] = hexCenter(q, r);
+    const target = clampTo(
+      { k: base.k, x: size.w / 2 - base.k * cx, y: (top + bottom) / 2 - base.k * cy },
+      nextCover,
+    );
+    setCover(nextCover);
+    cancelAnim();
+    const t0 = performance.now();
+    const step = (now: number) => {
+      const p = Math.min(1, (now - t0) / CENTER_MS);
+      const e = 1 - Math.pow(1 - p, 3); // parte veloce, finisce piano
+      setView({ k: base.k, x: base.x + (target.x - base.x) * e, y: base.y + (target.y - base.y) * e });
+      animRef.current = p < 1 ? requestAnimationFrame(step) : null;
+    };
+    animRef.current = requestAnimationFrame(step);
+  }
+
+  useEffect(() => {
+    viewRef.current = current;
+    centerRef.current = centerOnSlot;
+  });
+
+  // Quando scegli uno slot, dopo che la card si è aggiornata, lo porta al centro.
+  useEffect(() => {
+    if (!selected) return;
+    const id = requestAnimationFrame(() => centerRef.current(selected.q, selected.r));
+    return () => cancelAnimationFrame(id);
+  }, [selected]);
 
   // La rotella va registrata come listener non passivo per poter bloccare lo scroll della pagina.
   const zoomRef = useRef(zoomAt);
@@ -214,6 +273,7 @@ export function HexMap({
 
   // ---------------------------------------------------------------- gesti
   function onPointerDown(e: React.PointerEvent<SVGSVGElement>) {
+    cancelAnim();
     e.currentTarget.setPointerCapture(e.pointerId);
     ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const g = gesture.current;
@@ -467,6 +527,7 @@ export function HexMap({
 
       {/* Resta agganciato al fondo dello schermo: il bottone è sempre visibile. */}
       <div
+        ref={panelRef}
         className="poly sticky bottom-3 z-10 flex min-h-[112px] flex-col justify-center gap-3 p-4"
         style={{ background: "color-mix(in srgb, var(--foreground) 12%, var(--background))" }}
         aria-live="polite"
