@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/site";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Chakra_Petch, Inter } from "next/font/google";
@@ -20,7 +21,7 @@ const display = Chakra_Petch({
 export const metadata: Metadata = {
   title: en.meta.title,
   description: en.meta.description,
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://playredreach.com"),
+  metadataBase: new URL(SITE_URL),
 };
 
 export const viewport: Viewport = { themeColor: "#120b14" };

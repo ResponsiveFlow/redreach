@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/site";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -13,7 +14,7 @@ import { getSectorState } from "@/lib/map-data";
 import { getSession } from "@/lib/session";
 import { createPublicClient } from "@/lib/supabase/public";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://playredreach.com";
+const SITE = SITE_URL;
 
 async function Content() {
   const [{ t }, { supabase, user, colonist }] = await Promise.all([getDict(), getSession()]);
