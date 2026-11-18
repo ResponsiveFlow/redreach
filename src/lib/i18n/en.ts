@@ -154,6 +154,7 @@ export const en = {
     errGeneric: "We couldn't complete your registration. Try again.",
     holdLeft: "Slot held for {time}",
     holdExpired: "Your hold has expired. You can still claim this slot if nobody took it in the meantime.",
+    pickAnother: "Pick another plot",
     backToMap: "← Back to the map",
   },
   colonist: {

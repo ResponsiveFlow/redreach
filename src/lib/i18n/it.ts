@@ -155,6 +155,7 @@ export const it: Dict = {
     errGeneric: "Non siamo riusciti a completare la registrazione. Riprova.",
     holdLeft: "Slot bloccato per {time}",
     holdExpired: "Il blocco è scaduto. Puoi ancora prenotare questo slot se nessuno l'ha preso nel frattempo.",
+    pickAnother: "Scegli un altro lotto",
     backToMap: "← Torna alla mappa",
   },
   colonist: {

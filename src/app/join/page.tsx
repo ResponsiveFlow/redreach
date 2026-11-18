@@ -34,7 +34,7 @@ async function Content() {
         title={t.join.accountTitle}
         subtitle={fmt(t.join.accountSubtitle, slot)}
       >
-        <HoldTimer exp={hold.exp} />
+        <HoldTimer exp={hold.exp} zone={hold.z} />
         <AuthForm zone={hold.z} next="/join" initialMode="signup" />
         {back}
       </Shell>
@@ -43,7 +43,7 @@ async function Content() {
   return (
     <Shell step={4} zone={hold.z} title={t.join.nameTitle} subtitle={t.join.nameSubtitle}>
       <HoldRenew />
-      <HoldTimer exp={hold.exp} />
+      <HoldTimer exp={hold.exp} zone={hold.z} />
       <p className="poly bg-orange/15 p-3 text-sm font-bold text-orange">{t.join.finalNote}</p>
       <NameForm />
       {back}
