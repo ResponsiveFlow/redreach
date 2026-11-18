@@ -30,7 +30,7 @@ export const it: Dict = {
   signup: {
     emailPlaceholder: "la.tua@email.it",
     emailLabel: "Email",
-    consent: "Ho letto e accetto la {link}.",
+    consent: "Continuando accetti la {link}.",
     privacyPolicy: "privacy policy",
     sendCode: "Ricevi il codice",
     sending: "Invio…",

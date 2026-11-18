@@ -29,7 +29,7 @@ export const en = {
   signup: {
     emailPlaceholder: "you@email.com",
     emailLabel: "Email",
-    consent: "I have read and accept the {link}.",
+    consent: "By continuing you accept the {link}.",
     privacyPolicy: "privacy policy",
     sendCode: "Get the code",
     sending: "Sending…",

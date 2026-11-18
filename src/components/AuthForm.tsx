@@ -75,7 +75,6 @@ export function AuthForm({
   const [emailInput, setEmailInput] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [consent, setConsent] = useState(false);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -125,7 +124,7 @@ export function AuthForm({
   // ---------------------------------------------------------------- registrazione
   async function submitSignup(e: React.FormEvent) {
     e.preventDefault();
-    if (busy || !consent) return;
+    if (busy) return;
     if (password.length < MIN_PASSWORD) return setError(t.signup.errPasswordShort);
     setBusy(true);
     setError(null);
@@ -237,7 +236,6 @@ export function AuthForm({
 
   // ---------------------------------------------------------------- Google
   async function google() {
-    if (view === "signup" && !consent) return;
     if (zone) setZoneCookie(zone);
     markRenew();
     await supabase.auth.signInWithOAuth({
@@ -303,31 +301,23 @@ export function AuthForm({
   );
 
   const consentBox = (
-    <label className="flex items-start gap-3 text-sm">
-      <input
-        type="checkbox"
-        checked={consent}
-        onChange={(e) => setConsent(e.target.checked)}
-        className="mt-0.5 h-6 w-6 shrink-0 accent-[var(--radar)]"
-      />
-      <span>
-        {t.signup.consent.split("{link}")[0]}
-        <Link href="/privacy" className="underline" target="_blank">
-          {t.signup.privacyPolicy}
-        </Link>
-        {t.signup.consent.split("{link}")[1]}
-      </span>
-    </label>
+    <p className="text-xs opacity-70">
+      {t.signup.consent.split("{link}")[0]}
+      <Link href="/privacy" className="underline" target="_blank">
+        {t.signup.privacyPolicy}
+      </Link>
+      {t.signup.consent.split("{link}")[1]}
+    </p>
   );
 
-  const googleBlock = (needsConsent: boolean) => (
+  const googleBlock = () => (
     <>
       {inApp === false && (
         <>
           <div className="flex items-center gap-3 text-xs uppercase tracking-widest opacity-60">
             <span className="h-px flex-1 bg-current" /> {t.signup.or} <span className="h-px flex-1 bg-current" />
           </div>
-          <button type="button" className="btn btn-ghost" disabled={needsConsent && !consent} onClick={google}>
+          <button type="button" className="btn btn-ghost" onClick={google}>
             <GoogleIcon />
             {t.signup.google}
           </button>
@@ -435,7 +425,7 @@ export function AuthForm({
           {busy ? t.signup.loggingIn : t.signup.logInBtn}
         </button>
         {linkButton(t.signup.forgot, () => go("forgot"))}
-        {googleBlock(false)}
+        {googleBlock()}
         {initialMode === "login" ? (
           <Link href="/zone" className="text-sm underline">
             {t.signup.newHere}
@@ -452,13 +442,13 @@ export function AuthForm({
     <form onSubmit={submitSignup} className="flex flex-col gap-4">
       {emailField}
       {passwordField(t.signup.passwordLabel, "new-password", true)}
-      {consentBox}
       {errorBox}
       {existsBox}
-      <button className="btn" disabled={!consent || busy || !typed || !password}>
+      <button className="btn" disabled={busy || !typed || !password}>
         {busy ? t.signup.creating : t.signup.createAccount}
       </button>
-      {googleBlock(true)}
+      {googleBlock()}
+      {consentBox}
       {linkButton(t.signup.haveAccount, () => go("login"))}
     </form>
   );
