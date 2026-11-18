@@ -29,7 +29,7 @@ export function CookieNotice() {
   return (
     <div
       role="region"
-      className="fixed inset-x-0 bottom-0 z-50 mx-auto flex max-w-md items-center gap-3 bg-mars-4 p-3 text-xs"
+      className="mx-auto flex w-full max-w-md items-center gap-3 bg-mars-4 p-3 text-xs"
     >
       <p className="flex-1">
         {t.cookies.text}{" "}

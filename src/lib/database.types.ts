@@ -114,6 +114,13 @@ export type Database = {
             foreignKeyName: "colonists_sector_id_fkey"
             columns: ["sector_id"]
             isOneToOne: false
+            referencedRelation: "sector_stats"
+            referencedColumns: ["sector_id"]
+          },
+          {
+            foreignKeyName: "colonists_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
             referencedRelation: "sectors"
             referencedColumns: ["id"]
           },
@@ -182,6 +189,13 @@ export type Database = {
             foreignKeyName: "slot_holds_sector_id_fkey"
             columns: ["sector_id"]
             isOneToOne: false
+            referencedRelation: "sector_stats"
+            referencedColumns: ["sector_id"]
+          },
+          {
+            foreignKeyName: "slot_holds_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
             referencedRelation: "sectors"
             referencedColumns: ["id"]
           },
@@ -231,6 +245,13 @@ export type Database = {
             foreignKeyName: "slot_holds_sector_id_fkey"
             columns: ["sector_id"]
             isOneToOne: false
+            referencedRelation: "sector_stats"
+            referencedColumns: ["sector_id"]
+          },
+          {
+            foreignKeyName: "slot_holds_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
             referencedRelation: "sectors"
             referencedColumns: ["id"]
           },
@@ -266,10 +287,26 @@ export type Database = {
             foreignKeyName: "colonists_sector_id_fkey"
             columns: ["sector_id"]
             isOneToOne: false
+            referencedRelation: "sector_stats"
+            referencedColumns: ["sector_id"]
+          },
+          {
+            foreignKeyName: "colonists_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
             referencedRelation: "sectors"
             referencedColumns: ["id"]
           },
         ]
+      }
+      sector_stats: {
+        Row: {
+          fill: number | null
+          index: number | null
+          sector_id: number | null
+          zone: Database["public"]["Enums"]["zone_t"] | null
+        }
+        Relationships: []
       }
       zone_stats: {
         Row: {

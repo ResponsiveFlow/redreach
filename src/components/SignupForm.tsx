@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { GoogleIcon } from "@/components/GoogleIcon";
 import { isInAppBrowser } from "@/lib/inapp";
 import { fmt } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n/client";
@@ -182,6 +183,7 @@ export function SignupForm({ zone, next }: { zone: Zone; next: string }) {
             <span className="h-px flex-1 bg-current" /> {t.signup.or} <span className="h-px flex-1 bg-current" />
           </div>
           <button type="button" className="btn btn-ghost" disabled={!consent} onClick={google}>
+            <GoogleIcon />
             {t.signup.google}
           </button>
         </>

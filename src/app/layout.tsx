@@ -28,8 +28,8 @@ async function Lang({ children }: { children: React.ReactNode }) {
   const { lang, t } = await getDict();
   return (
     <I18nProvider lang={lang} t={t}>
-      {children}
       <CookieNotice />
+      {children}
     </I18nProvider>
   );
 }

@@ -2,6 +2,18 @@ import { cacheLife } from "next/cache";
 import { createPublicClient } from "./supabase/public";
 import { ZONES, type Zone } from "./zones";
 
+/** Coloni che stanno scegliendo uno slot in questo momento (tutti i settori). */
+export async function getClaimingCount(): Promise<number> {
+  try {
+    const { count } = await createPublicClient()
+      .from("public_holds")
+      .select("*", { count: "exact", head: true });
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 export type ZoneStat = { zone: Zone; colonists: number };
 
 /**

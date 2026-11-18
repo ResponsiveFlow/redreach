@@ -10,7 +10,7 @@
   --orange: #f4925a;
   --radar: #5ef2d2;
   --ice: #9ed8f5;
-  --metal: #b9c2d0;
+  --metal: #a9a9ae; /* grigio neutro: distinto dal ghiaccio */
   --sun: #ffc24b;
 }
 
@@ -40,6 +40,15 @@ body {
 [data-zone="ice"] { --c: var(--ice); --on: #120b14; }
 [data-zone="metal"] { --c: var(--metal); --on: #120b14; }
 [data-zone="sun"] { --c: var(--sun); --on: #120b14; }
+
+@keyframes rr-blink {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+.blink { animation: rr-blink 1.1s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .blink { animation: none; opacity: 0.85; }
+}
 
 @layer components {
   /* Stile low-poly: angoli tagliati invece di bordi arrotondati */
