@@ -79,6 +79,7 @@ export function AuthForm({
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [exists, setExists] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const typed = emailInput.trim().toLowerCase();
   // Nel passo del codice l'email può arrivare dal salvataggio (dopo un ricaricamento).
@@ -100,6 +101,7 @@ export function AuthForm({
 
   function go(v: View) {
     setError(null);
+    setExists(false);
     setCode("");
     setView(v);
   }
@@ -127,6 +129,7 @@ export function AuthForm({
     if (password.length < MIN_PASSWORD) return setError(t.signup.errPasswordShort);
     setBusy(true);
     setError(null);
+    setExists(false);
     if (zone) setZoneCookie(zone);
     const { data, error: err } = await supabase.auth.signUp({
       email: typed,
@@ -145,7 +148,7 @@ export function AuthForm({
       return;
     }
     // Supabase non dà errore se l'email esiste già: l'utente torna senza "identities".
-    if (data.user && data.user.identities?.length === 0) return setError(t.signup.errExists);
+    if (data.user && data.user.identities?.length === 0) return setExists(true);
     if (data.session) return done(); // verifica email disattivata nel progetto
     savePending(typed);
     setView("code");
@@ -247,6 +250,16 @@ export function AuthForm({
   const errorBox = error && (
     <p role="alert" className="text-sm font-bold text-orange">
       {error}
+    </p>
+  );
+
+  // Email già registrata: "Accedi" porta al login con email e password già compilate.
+  const existsBox = exists && (
+    <p role="alert" className="text-sm font-bold text-orange">
+      {t.signup.errExists}{" "}
+      <button type="button" className="underline" onClick={() => go("login")}>
+        {t.signup.logInLink}
+      </button>
     </p>
   );
 
@@ -441,6 +454,7 @@ export function AuthForm({
       {passwordField(t.signup.passwordLabel, "new-password", true)}
       {consentBox}
       {errorBox}
+      {existsBox}
       <button className="btn" disabled={!consent || busy || !typed || !password}>
         {busy ? t.signup.creating : t.signup.createAccount}
       </button>

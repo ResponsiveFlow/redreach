@@ -31,6 +31,17 @@ async function Content({ props }: { props: PageProps<"/zone/[zone]"> }) {
   const f = String(Array.isArray(sp.focus) ? sp.focus[0] : (sp.focus ?? "")).match(/^(\d+)-(\d+)$/);
   const mine =
     colonist && colonist.sector_id === active.id ? { q: colonist.q, r: colonist.r } : null;
+  let mySlot = null;
+  if (colonist) {
+    const { data: mySector } = await db.from("sectors").select("index").eq("id", colonist.sector_id).single();
+    mySlot = {
+      zone: colonist.zone,
+      sectorId: colonist.sector_id,
+      sectorIndex: mySector?.index ?? 1,
+      q: colonist.q,
+      r: colonist.r,
+    };
+  }
   const focus = f ? { q: Number(f[1]), r: Number(f[2]) } : mine;
 
   // Arrivi dal link di un amico: "Atterra accanto a <nome>".
@@ -48,9 +59,9 @@ async function Content({ props }: { props: PageProps<"/zone/[zone]"> }) {
 
   return (
     <Shell
-      step={2}
+      step={colonist ? undefined : 2}
       zone={zone}
-      title={fmt(t.map.title, { zone: t.zones[zone].name })}
+      title={fmt(colonist ? t.map.viewTitle : t.map.title, { zone: t.zones[zone].name })}
     >
       {inviter && (
         <p className="poly bg-orange/15 p-3 text-sm font-bold text-orange">
@@ -84,6 +95,7 @@ async function Content({ props }: { props: PageProps<"/zone/[zone]"> }) {
         initialHeld={held}
         focus={focus}
         mine={mine}
+        mySlot={mySlot}
         readOnly={!!colonist}
       />
     </Shell>

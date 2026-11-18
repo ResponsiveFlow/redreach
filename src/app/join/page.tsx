@@ -44,6 +44,7 @@ async function Content() {
     <Shell step={4} zone={hold.z} title={t.join.nameTitle} subtitle={t.join.nameSubtitle}>
       <HoldRenew />
       <HoldTimer exp={hold.exp} />
+      <p className="poly bg-orange/15 p-3 text-sm font-bold text-orange">{t.join.finalNote}</p>
       <NameForm />
       {back}
     </Shell>

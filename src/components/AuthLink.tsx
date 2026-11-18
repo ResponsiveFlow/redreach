@@ -38,19 +38,24 @@ export function AuthLink() {
   }
 
   return (
-    <button
-      type="button"
-      className={CLASS}
-      disabled={busy}
-      onClick={async () => {
-        setBusy(true);
-        await supabase.auth.signOut({ scope: "local" }); // solo questo dispositivo
-        setBusy(false);
-        router.replace("/");
-        router.refresh();
-      }}
-    >
-      {t.login.logout}
-    </button>
+    <span className="flex items-center gap-4">
+      <Link href="/colonist" className={CLASS}>
+        {t.login.profile}
+      </Link>
+      <button
+        type="button"
+        className={CLASS}
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          await supabase.auth.signOut({ scope: "local" }); // solo questo dispositivo
+          setBusy(false);
+          router.replace("/");
+          router.refresh();
+        }}
+      >
+        {t.login.logout}
+      </button>
+    </span>
   );
 }

@@ -27,6 +27,7 @@ export function HexMap({
   initialHeld,
   focus,
   mine = null,
+  mySlot = null,
   readOnly = false,
 }: {
   zone: Zone;
@@ -36,6 +37,8 @@ export function HexMap({
   focus: { q: number; r: number } | null;
   /** Lo slot di chi guarda (se ha già prenotato): evidenziato. */
   mine?: { q: number; r: number } | null;
+  /** Lo slot di chi guarda, con zona e settore (anche se è in un'altra mappa). */
+  mySlot?: { zone: Zone; sectorId: number; sectorIndex: number; q: number; r: number } | null;
   /** Chi ha già uno slot vede la mappa ma non può prenotare. */
   readOnly?: boolean;
 }) {
@@ -435,8 +438,26 @@ export function HexMap({
         style={{ background: "color-mix(in srgb, var(--foreground) 12%, var(--background))" }}
         aria-live="polite"
       >
-        {!selected && (
-          <p className="text-sm opacity-80">{readOnly ? t.map.youHave : t.map.hint}</p>
+        {!selected && !readOnly && <p className="text-sm opacity-80">{t.map.hint}</p>}
+
+        {!selected && readOnly && (mine || !mySlot) && (
+          <p className="text-sm opacity-80">{t.map.youHave}</p>
+        )}
+
+        {!selected && readOnly && !mine && mySlot && (
+          <>
+            <p className="font-display text-lg leading-tight">
+              {fmt(t.map.alreadyHave, {
+                sector: `${t.zones[mySlot.zone].name} ${mySlot.sectorIndex}`,
+              })}
+            </p>
+            <Link
+              href={`/zone/${mySlot.zone}?sector=${mySlot.sectorId}&focus=${mySlot.q}-${mySlot.r}`}
+              className="btn"
+            >
+              {t.map.viewMine}
+            </Link>
+          </>
         )}
 
         {selected && selOwn && !selTaken && (
@@ -469,7 +490,7 @@ export function HexMap({
           <>
             <div className="flex flex-col gap-1">
               <p className="font-display text-xl">
-                {fmt(t.map.slot, selected)} · {fmt(t.map.fromDeposit, { d: selDistance })}
+                {fmt(t.map.slot, selected)} · {fmt(selDistance === 1 ? t.map.fromDepositOne : t.map.fromDeposit, { d: selDistance })}
               </p>
               {selRich !== "normal" && (
                 <p className="text-sm font-bold" style={{ color: "var(--c)" }}>
@@ -483,8 +504,10 @@ export function HexMap({
                   {busy ? t.map.reserving : t.map.reserve}
                 </button>
                 <p className="text-xs opacity-70">{fmt(t.map.holdNote, { m: HOLD_MINUTES })}</p>
+                <p className="text-xs font-bold text-orange">{t.map.finalNote}</p>
               </>
             )}
+            {readOnly && <p className="text-xs opacity-70">{t.map.onlyOne}</p>}
           </>
         )}
 

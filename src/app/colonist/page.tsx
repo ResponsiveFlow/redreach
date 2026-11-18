@@ -64,6 +64,7 @@ async function Content() {
         </h2>
         <NeighborMap
           me={me}
+          myName={colonist.colonist_name ?? fmt(t.map.colonistN, { n: colonist.colonist_number })}
           cols={sector.cols}
           rows={sector.rows}
           deposits={deposits}
