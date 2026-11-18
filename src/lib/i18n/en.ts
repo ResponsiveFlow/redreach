@@ -197,6 +197,7 @@ export const en = {
     title: "Log in",
     subtitle: "Welcome back, colonist.",
     link: "Log in",
+    logout: "Log out",
   },
   cookies: {
     text: "We only use technical cookies (language, login, where you came from). No ads.",

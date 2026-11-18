@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthLink } from "@/components/AuthLink";
 import { LangSwitch } from "@/components/LangSwitch";
 import { fmt } from "@/lib/i18n";
 import { getDict } from "@/lib/i18n/server";
@@ -29,7 +30,10 @@ export async function Shell({
         <Link href="/" className="font-display text-xl tracking-tight text-mars">
           {t.common.brand}
         </Link>
-        <LangSwitch />
+        <div className="flex items-center gap-4">
+          <AuthLink />
+          <LangSwitch />
+        </div>
       </header>
       {step && (
         <div className="flex flex-col gap-2">

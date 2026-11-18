@@ -198,6 +198,7 @@ export const it: Dict = {
     title: "Accedi",
     subtitle: "Bentornato, colono.",
     link: "Accedi",
+    logout: "Esci",
   },
   cookies: {
     text: "Usiamo solo cookie tecnici (lingua, accesso, provenienza). Nessuna pubblicità.",

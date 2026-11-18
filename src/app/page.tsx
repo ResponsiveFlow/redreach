@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { AuthLink } from "@/components/AuthLink";
 import { LangSwitch } from "@/components/LangSwitch";
 import { VisitLogger } from "@/components/VisitLogger";
 import { getZoneStats } from "@/lib/data";
@@ -60,9 +61,7 @@ async function Content() {
       <header className="flex items-center justify-between">
         <span className="font-display text-xl tracking-tight text-mars">{t.common.brand}</span>
         <div className="flex items-center gap-4">
-          <Link href="/login" className="text-xs font-bold uppercase tracking-widest underline">
-            {t.login.link}
-          </Link>
+          <AuthLink />
           <LangSwitch />
         </div>
       </header>
