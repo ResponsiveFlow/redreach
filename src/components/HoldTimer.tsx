@@ -2,11 +2,14 @@
 
 import { fmt } from "@/lib/i18n";
 import { useNow } from "@/lib/clock";
+import { useHold } from "@/lib/hold-client";
 import { useI18n } from "@/lib/i18n/client";
 
 /** Conto alla rovescia del blocco slot. Non mostra nulla sul server né a blocco scaduto. */
-export function HoldTimer({ exp }: { exp: number }) {
+export function HoldTimer({ exp: initialExp }: { exp: number }) {
   const { t } = useI18n();
+  // Dopo il rinnovo il cookie ha una nuova scadenza: il timer la segue.
+  const exp = useHold()?.exp ?? initialExp;
   const now = useNow();
   const left = Math.floor((exp - now) / 1000);
   if (!now) return null;

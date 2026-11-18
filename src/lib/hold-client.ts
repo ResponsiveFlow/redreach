@@ -21,6 +21,14 @@ export function sessionId(): string {
   return id;
 }
 
+/** Chiave temporanea: "l'utente ha appena verificato l'account, rinnova il blocco una volta". */
+export const RENEW_KEY = "rr_renew";
+
+/** Il blocco salvato nel cookie, anche se il tempo è già scaduto (lo slot può essere ancora libero). */
+export function readHold(): Hold | null {
+  return parseHold(getCookie(HOLD_COOKIE) || undefined);
+}
+
 export function saveHoldCookie(hold: Hold) {
   document.cookie = `${HOLD_COOKIE}=${encodeURIComponent(JSON.stringify(hold))}; path=/; max-age=86400; samesite=lax`;
   window.dispatchEvent(new Event(HOLD_EVENT));

@@ -8,6 +8,7 @@ import { GoogleIcon } from "@/components/GoogleIcon";
 import { isInAppBrowser } from "@/lib/inapp";
 import { fmt } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n/client";
+import { RENEW_KEY } from "@/lib/hold-client";
 import { ZONE_COOKIE, type Zone } from "@/lib/zones";
 
 type View = "signup" | "login" | "forgot" | "code" | "reset";
@@ -103,8 +104,16 @@ export function AuthForm({
     setView(v);
   }
 
+  function markRenew() {
+    if (next !== "/join") return;
+    try {
+      localStorage.setItem(RENEW_KEY, String(Date.now()));
+    } catch {}
+  }
+
   function done() {
     clearPending();
+    markRenew();
     router.replace(next);
     router.refresh();
   }
@@ -227,6 +236,7 @@ export function AuthForm({
   async function google() {
     if (view === "signup" && !consent) return;
     if (zone) setZoneCookie(zone);
+    markRenew();
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}` },

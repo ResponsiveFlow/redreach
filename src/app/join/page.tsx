@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { HoldRenew } from "@/components/HoldRenew";
 import { HoldTimer } from "@/components/HoldTimer";
 import { NameForm } from "@/components/NameForm";
 import { Shell } from "@/components/Shell";
@@ -41,6 +42,7 @@ async function Content() {
   }
   return (
     <Shell step={4} zone={hold.z} title={t.join.nameTitle} subtitle={t.join.nameSubtitle}>
+      <HoldRenew />
       <HoldTimer exp={hold.exp} />
       <NameForm />
       {back}
