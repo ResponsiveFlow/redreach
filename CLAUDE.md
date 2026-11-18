@@ -3,7 +3,7 @@
 ## Contesto
 Red Reach (playredreach.com) è uno strategico mobile alla Clash of Clans ambientato su Marte: ogni giocatore ha una base su una mappa condivisa, i vicini sono persone vere e puoi attaccare solo chi è nel raggio del tuo radar.
 Il gioco NON esiste ancora. Questa landing serve solo a validare l'interesse: le persone arrivano dai video Instagram/TikTok, scelgono una zona di Marte, prenotano uno slot sulla mappa e lo condividono.
-Mai promettere date di uscita. Si vende il lotto riservato e la community.
+Si vende il lotto riservato e la community. In cima al sito c'è un countdown "apertura gioco" (decisione del 18/11/2026), con data e on/off impostabili da /admin (`countdown_at`, `countdown_enabled` in `app_config`); non promettere altre date oltre a quella.
 
 ## Da dove parte questo codice
 Il repository è una copia della landing di un altro progetto (Delibra). Prima di modificare, fai un piano: cosa resta, cosa cambia, cosa si elimina.

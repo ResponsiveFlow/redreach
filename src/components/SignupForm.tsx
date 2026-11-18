@@ -12,13 +12,51 @@ import { ZONE_COOKIE, type Zone } from "@/lib/zones";
 
 type Step = "email" | "code";
 
+// Se la webview si ricarica mentre l'utente va a prendere il codice (app Mail, notifica),
+// al ritorno ritrova subito il campo del codice con la sua email.
+const PENDING_KEY = "rr_otp";
+const PENDING_TTL_MS = 15 * 60 * 1000;
+
+/** Email in attesa del codice (stringa vuota se non c'è o è troppo vecchia). */
+function readPending(): string {
+  try {
+    const raw = localStorage.getItem(PENDING_KEY);
+    if (!raw) return "";
+    const p = JSON.parse(raw) as { email?: string; ts?: number };
+    if (typeof p.email !== "string" || typeof p.ts !== "number" || Date.now() - p.ts > PENDING_TTL_MS) {
+      localStorage.removeItem(PENDING_KEY);
+      return "";
+    }
+    return p.email;
+  } catch {
+    return "";
+  }
+}
+function setZoneCookie(zone: Zone) {
+  document.cookie = `${ZONE_COOKIE}=${zone}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
+}
+function savePending(email: string) {
+  try {
+    localStorage.setItem(PENDING_KEY, JSON.stringify({ email, ts: Date.now() }));
+  } catch {}
+}
+function clearPending() {
+  try {
+    localStorage.removeItem(PENDING_KEY);
+  } catch {}
+}
+
 /** `next`: dove andare dopo la verifica (il passo successivo del flusso, deciso dalla pagina). */
 export function SignupForm({ zone, next }: { zone: Zone; next: string }) {
   const { t } = useI18n();
   const router = useRouter();
   const [supabase] = useState(() => createClient());
-  const [step, setStep] = useState<Step>("email");
-  const [email, setEmail] = useState("");
+  // null sul server e durante l'idratazione, poi l'email salvata (se c'è).
+  const pending = useSyncExternalStore(() => () => {}, readPending, () => null);
+  const [stepOverride, setStepOverride] = useState<Step | null>(null);
+  const [emailInput, setEmailInput] = useState("");
+  const step: Step = stepOverride ?? (pending ? "code" : "email");
+  const address = (emailInput || pending || "").trim().toLowerCase();
   const [consent, setConsent] = useState(false);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -38,18 +76,17 @@ export function SignupForm({ zone, next }: { zone: Zone; next: string }) {
     return () => clearTimeout(t);
   }, [cooldown]);
 
-  function rememberZone() {
-    document.cookie = `${ZONE_COOKIE}=${zone}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
-  }
+  const rememberZone = () => setZoneCookie(zone);
 
   async function sendCode(e?: React.FormEvent) {
     e?.preventDefault();
-    if (!consent || busy) return;
+    // Il consenso è già stato dato se si sta rimandando il codice.
+    if ((!consent && step !== "code") || busy || !address) return;
     setBusy(true);
     setError(null);
     rememberZone();
     const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim().toLowerCase(),
+      email: address,
       options: { shouldCreateUser: true, data: { zone } },
     });
     setBusy(false);
@@ -59,7 +96,8 @@ export function SignupForm({ zone, next }: { zone: Zone; next: string }) {
       );
       return;
     }
-    setStep("code");
+    savePending(address);
+    setStepOverride("code");
     setCooldown(30);
   }
 
@@ -69,7 +107,7 @@ export function SignupForm({ zone, next }: { zone: Zone; next: string }) {
     setBusy(true);
     setError(null);
     const { error } = await supabase.auth.verifyOtp({
-      email: email.trim().toLowerCase(),
+      email: address,
       token,
       type: "email",
     });
@@ -80,6 +118,7 @@ export function SignupForm({ zone, next }: { zone: Zone; next: string }) {
       setError(t.signup.errCode);
       return;
     }
+    clearPending();
     router.replace(next);
     router.refresh();
   }
@@ -115,7 +154,7 @@ export function SignupForm({ zone, next }: { zone: Zone; next: string }) {
     return (
       <div className="flex flex-col gap-4">
         <p className="text-sm">
-          {fmt(t.signup.codeSent, { email })}
+          {fmt(t.signup.codeSent, { email: address })}
         </p>
         <input
           className="field text-center font-display text-3xl tracking-[.4em]"
@@ -147,7 +186,9 @@ export function SignupForm({ zone, next }: { zone: Zone; next: string }) {
           type="button"
           className="text-sm underline"
           onClick={() => {
-            setStep("email");
+            clearPending();
+            setEmailInput(address);
+            setStepOverride("email");
             setCode("");
             setError(null);
           }}
@@ -168,12 +209,12 @@ export function SignupForm({ zone, next }: { zone: Zone; next: string }) {
         placeholder={t.signup.emailPlaceholder}
         required
         aria-label={t.signup.emailLabel}
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        value={emailInput}
+        onChange={(e) => setEmailInput(e.target.value)}
       />
       {consentBox}
       {error && <p role="alert" className="text-sm font-bold">{error}</p>}
-      <button className="btn" disabled={!consent || busy || !email}>
+      <button className="btn" disabled={!consent || busy || !emailInput}>
         {busy ? t.signup.sending : t.signup.sendCode}
       </button>
 

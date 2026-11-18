@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../database.types";
 
-/** Client anonimo senza cookie: per dati pubblici (contatori) dentro `use cache`. */
+/** Client anonimo senza cookie: per dati pubblici (contatori, mappa). */
 export function createPublicClient() {
   return createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

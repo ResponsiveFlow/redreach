@@ -308,6 +308,13 @@ export type Database = {
         }
         Relationships: []
       }
+      site_countdown: {
+        Row: {
+          enabled: boolean | null
+          ends_at: string | null
+        }
+        Relationships: []
+      }
       zone_stats: {
         Row: {
           colonists: number | null
@@ -426,6 +433,32 @@ export type Database = {
       }
       my_invite_count: { Args: never; Returns: number }
       set_colonist_name: { Args: { p_name: string }; Returns: string }
+      set_social_handles: {
+        Args: { p_ig?: string; p_tiktok?: string }
+        Returns: {
+          colonist_name: string | null
+          colonist_number: number
+          created_at: string
+          email: string
+          id: string
+          ig_username: string | null
+          lang: string
+          q: number
+          r: number
+          ref_code: string
+          referred_by: string | null
+          sector_id: number
+          source: string
+          tiktok_username: string | null
+          zone: Database["public"]["Enums"]["zone_t"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "colonists"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       zone_t: "ice" | "metal" | "sun"

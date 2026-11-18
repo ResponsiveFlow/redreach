@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Chakra_Petch, Inter } from "next/font/google";
 import { CookieNotice } from "@/components/CookieNotice";
+import { CountdownBar } from "@/components/CountdownBar";
 import { I18nProvider } from "@/lib/i18n/client";
 import { getDict } from "@/lib/i18n/server";
 import { en } from "@/lib/i18n/en";
@@ -29,6 +30,9 @@ async function Lang({ children }: { children: React.ReactNode }) {
   return (
     <I18nProvider lang={lang} t={t}>
       <CookieNotice />
+      <Suspense>
+        <CountdownBar />
+      </Suspense>
       {children}
     </I18nProvider>
   );

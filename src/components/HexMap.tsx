@@ -32,12 +32,18 @@ export function HexMap({
   initialTaken,
   initialHeld,
   focus,
+  mine = null,
+  readOnly = false,
 }: {
   zone: Zone;
   sector: SectorInfo;
   initialTaken: TakenSlot[];
   initialHeld: HeldSlot[];
   focus: { q: number; r: number } | null;
+  /** Lo slot di chi guarda (se ha già prenotato): evidenziato. */
+  mine?: { q: number; r: number } | null;
+  /** Chi ha già uno slot vede la mappa ma non può prenotare. */
+  readOnly?: boolean;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -338,6 +344,14 @@ export function HexMap({
                   strokeDasharray="5 3"
                 />
               )}
+              {mine && (
+                <path
+                  d={hexPath(mine.q, mine.r, 1.05)}
+                  fill="none"
+                  stroke="var(--radar)"
+                  strokeWidth={3}
+                />
+              )}
               {selected && (
                 <path
                   d={hexPath(selected.q, selected.r, 1)}
@@ -389,6 +403,7 @@ export function HexMap({
         <Legend color="var(--mars-3)" opacity={0.9} label={t.map.legendTaken} />
         <Legend color="var(--radar)" opacity={0.9} label={t.map.legendDeposit} />
         <Legend color="var(--orange)" opacity={1} label={t.map.legendHeld} blink />
+        {mine && <Legend color="var(--radar)" opacity={1} label={t.map.legendMine} />}
       </ul>
 
 
@@ -398,7 +413,9 @@ export function HexMap({
         style={{ background: "color-mix(in srgb, var(--foreground) 12%, var(--background))" }}
         aria-live="polite"
       >
-        {!selected && <p className="text-sm opacity-80">{t.map.hint}</p>}
+        {!selected && (
+          <p className="text-sm opacity-80">{readOnly ? t.map.youHave : t.map.hint}</p>
+        )}
 
         {selected && selTaken && (
           <>
@@ -428,10 +445,14 @@ export function HexMap({
                 </p>
               )}
             </div>
-            <button type="button" className="btn" disabled={busy} onClick={reserve}>
-              {busy ? t.map.reserving : t.map.reserve}
-            </button>
-            <p className="text-xs opacity-70">{fmt(t.map.holdNote, { m: HOLD_MINUTES })}</p>
+            {!readOnly && (
+              <>
+                <button type="button" className="btn" disabled={busy} onClick={reserve}>
+                  {busy ? t.map.reserving : t.map.reserve}
+                </button>
+                <p className="text-xs opacity-70">{fmt(t.map.holdNote, { m: HOLD_MINUTES })}</p>
+              </>
+            )}
           </>
         )}
 

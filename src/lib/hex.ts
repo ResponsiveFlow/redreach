@@ -74,3 +74,16 @@ export function sectorBounds(cols: number, rows: number) {
     height: HEX * (1.5 * (rows - 1) + 2),
   };
 }
+
+export const NEIGHBOR_RADIUS = 4;
+
+/** Esagoni del quartiere: tutti quelli dentro la griglia entro `radius` dallo slot (q,r). */
+export function neighborhood(q: number, r: number, cols: number, rows: number, radius = NEIGHBOR_RADIUS) {
+  const out: { q: number; r: number }[] = [];
+  for (let rr = Math.max(0, r - radius); rr <= Math.min(rows - 1, r + radius); rr++) {
+    for (let qq = Math.max(0, q - radius - 1); qq <= Math.min(cols - 1, q + radius + 1); qq++) {
+      if (hexDistance(q, r, qq, rr) <= radius) out.push({ q: qq, r: rr });
+    }
+  }
+  return out;
+}

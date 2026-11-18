@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { HexMap } from "@/components/HexMap";
 import { MarsOverlay } from "@/components/MarsOverlay";
@@ -9,14 +10,15 @@ import { getDict } from "@/lib/i18n/server";
 import { getOpenSectors, getSectorState } from "@/lib/map-data";
 import { getSession } from "@/lib/session";
 import { createPublicClient } from "@/lib/supabase/public";
+import { TRACK_COOKIE, parseTrackingCookie } from "@/lib/tracking";
 import { isZone } from "@/lib/zones";
 
 async function Content({ props }: { props: PageProps<"/zone/[zone]"> }) {
   const [{ zone }, sp, { t }] = await Promise.all([props.params, props.searchParams, getDict()]);
   if (!isZone(zone)) notFound();
 
+  // Chi ha già uno slot vede la mappa ma non può prenotare.
   const { colonist } = await getSession();
-  if (colonist) redirect("/colonist");
 
   const db = createPublicClient();
   const sectors = await getOpenSectors(db, zone);
@@ -27,7 +29,22 @@ async function Content({ props }: { props: PageProps<"/zone/[zone]"> }) {
 
   // ?focus=q-r centra la mappa su uno slot (es. quello di chi ti ha invitato)
   const f = String(Array.isArray(sp.focus) ? sp.focus[0] : (sp.focus ?? "")).match(/^(\d+)-(\d+)$/);
-  const focus = f ? { q: Number(f[1]), r: Number(f[2]) } : null;
+  const mine =
+    colonist && colonist.sector_id === active.id ? { q: colonist.q, r: colonist.r } : null;
+  const focus = f ? { q: Number(f[1]), r: Number(f[2]) } : mine;
+
+  // Arrivi dal link di un amico: "Atterra accanto a <nome>".
+  let inviter: string | null = null;
+  if (!colonist && focus && f) {
+    const ref = parseTrackingCookie((await cookies()).get(TRACK_COOKIE)?.value)?.ref;
+    if (ref) {
+      const { data } = await db.rpc("invite_lookup", { p_ref: ref });
+      const row = data?.[0];
+      if (row && row.sector_id === active.id && row.q === focus.q && row.r === focus.r) {
+        inviter = row.colonist_name ?? fmt(t.map.colonistN, { n: row.colonist_number });
+      }
+    }
+  }
 
   return (
     <Shell
@@ -35,6 +52,11 @@ async function Content({ props }: { props: PageProps<"/zone/[zone]"> }) {
       zone={zone}
       title={fmt(t.map.title, { zone: t.zones[zone].name })}
     >
+      {inviter && (
+        <p className="poly bg-orange/15 p-3 text-sm font-bold text-orange">
+          {fmt(t.map.landNext, { name: inviter })}
+        </p>
+      )}
       {sp.e === "taken" && (
         <p role="alert" className="text-sm font-bold text-orange">
           {t.map.errTaken}
@@ -61,6 +83,8 @@ async function Content({ props }: { props: PageProps<"/zone/[zone]"> }) {
         initialTaken={taken}
         initialHeld={held}
         focus={focus}
+        mine={mine}
+        readOnly={!!colonist}
       />
     </Shell>
   );
