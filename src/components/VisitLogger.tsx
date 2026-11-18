@@ -19,7 +19,13 @@ export function VisitLogger() {
       }
       const m = document.cookie.match(new RegExp(`(?:^|; )${TRACK_COOKIE}=([^;]+)`));
       const src = parseTrackingCookie(m?.[1])?.src ?? "altro";
-      void createClient().rpc("log_visit", { p_visitor: vid, p_source: src, p_lang: lang });
+      // La richiesta parte solo con .then(): senza, il builder di supabase-js non invia nulla.
+      createClient()
+        .rpc("log_visit", { p_visitor: vid, p_source: src, p_lang: lang })
+        .then(
+          () => {},
+          () => {},
+        );
     } catch {
       // storage bloccato (webview, modalità privata): niente tracciamento, nessun errore
     }
